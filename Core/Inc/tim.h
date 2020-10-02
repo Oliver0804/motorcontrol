@@ -41,7 +41,8 @@ void MX_TIM2_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN Prototypes */
-
+void user_pwm_setvalue_1(uint16_t value);
+void user_pwm_setvalue_2(uint16_t value);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

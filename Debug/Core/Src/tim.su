@@ -2,3 +2,5 @@ tim.c:30:6:MX_TIM2_Init	48	static
 tim.c:67:6:HAL_TIM_PWM_MspInit	24	static
 tim.c:82:6:HAL_TIM_MspPostInit	40	static
 tim.c:111:6:HAL_TIM_PWM_MspDeInit	16	static
+tim.c:130:6:user_pwm_setvalue_1	48	static
+tim.c:142:6:user_pwm_setvalue_2	48	static

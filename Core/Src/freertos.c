@@ -51,7 +51,8 @@ int speed_flag = 2000;
 int timer_conut = 10;
 uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
-uint8_t i;
+int i=0;
+int buttom_flag=0;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -74,15 +75,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	switch (GPIO_Pin) {
 	case GPIO_PIN_3: // GPIO_PIN_13 is the Blue Button
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
+		buttom_flag=1;
 		break;
 	case GPIO_PIN_4:
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
+		buttom_flag=2;
 		break;
 	case GPIO_PIN_5:
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
+		buttom_flag=3;
 		break;
 	case GPIO_PIN_6:
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
+		buttom_flag=4;
 		break;
 	}
 }
@@ -98,34 +103,37 @@ void fan_zhuan(void) {
 void stop_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
+	user_pwm_setvalue_1(0);
+	user_pwm_setvalue_2(0);
 }
 void lock_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
 }
+void turn_on_motor(int slow_time,int time,int slow_pwm,int pwm){
+	zheng_zhuan();
+	user_pwm_setvalue_1(slow_pwm);
+	osDelay(slow_time);
+	user_pwm_setvalue_1(pwm);
+	osDelay(time);
+	user_pwm_setvalue_1(slow_pwm);
+	osDelay(slow_time);
+	stop_motor();
 
-void user_pwm_setvalue_1(uint16_t value)
-{
-    TIM_OC_InitTypeDef sConfigOC;
-
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 }
-void user_pwm_setvalue_2(uint16_t value)
-{
-    TIM_OC_InitTypeDef sConfigOC;
 
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+void turn_off_motor(int slow_time,int time,int slow_pwm,int pwm){
+	fan_zhuan();
+	user_pwm_setvalue_2(slow_pwm);
+	osDelay(slow_time);
+	user_pwm_setvalue_2(pwm);
+	osDelay(time);
+	user_pwm_setvalue_2(slow_pwm);
+	osDelay(slow_time);
+	stop_motor();
+
 }
+
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -140,7 +148,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+	stop_motor();
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -182,15 +190,18 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-
 	/* Infinite loop */
 	for (;;) {
-		user_pwm_setvalue_1(1000);
-		user_pwm_setvalue_2(1500);
 
-		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		if(buttom_flag==1){
+			turn_on_motor(1000, 5000, 500, 1000);
+			buttom_flag=0;
+		}else if(buttom_flag==2){
+			turn_off_motor(1000, 5000, 500, 1000);
+			buttom_flag=0;
+		}
 		osDelay(1);
-		//osDelay(speed_flag);
+
 	}
   /* USER CODE END StartDefaultTask */
 }
@@ -211,12 +222,13 @@ void StartTask02(void *argument)
 		for (i = 0, ad1 = 0, ad2 = 0; i < 100;) {
 			ad1 += ADC_Value[i++];
 			ad2 += ADC_Value[i++];
+			osDelay(10);
 		}
 		ad1 /= 50;
 		ad2 /= 50;
-		//HAL_GPIO_TogglePin(GPIOx, GPIO_Pin)
-		osDelay(1);
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 	}
+
   /* USER CODE END StartTask02 */
 }
 

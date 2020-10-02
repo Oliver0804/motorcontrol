@@ -60,8 +60,18 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define M_EN_Pin GPIO_PIN_15
-#define M_EN_GPIO_Port GPIOB
+#define ADC1_Pin GPIO_PIN_7
+#define ADC1_GPIO_Port GPIOA
+#define ADC2_Pin GPIO_PIN_0
+#define ADC2_GPIO_Port GPIOB
+#define PWM1_Pin GPIO_PIN_10
+#define PWM1_GPIO_Port GPIOB
+#define PWM2_Pin GPIO_PIN_11
+#define PWM2_GPIO_Port GPIOB
+#define MC_4_Pin GPIO_PIN_14
+#define MC_4_GPIO_Port GPIOB
+#define MC_3_Pin GPIO_PIN_15
+#define MC_3_GPIO_Port GPIOB
 #define MC_2_Pin GPIO_PIN_8
 #define MC_2_GPIO_Port GPIOA
 #define MC_1_Pin GPIO_PIN_9
@@ -70,6 +80,18 @@ void Error_Handler(void);
 #define LED2_GPIO_Port GPIOA
 #define LED1_Pin GPIO_PIN_12
 #define LED1_GPIO_Port GPIOA
+#define BUTTOM1_Pin GPIO_PIN_3
+#define BUTTOM1_GPIO_Port GPIOB
+#define BUTTOM1_EXTI_IRQn EXTI3_IRQn
+#define BUTTON2_Pin GPIO_PIN_4
+#define BUTTON2_GPIO_Port GPIOB
+#define BUTTON2_EXTI_IRQn EXTI4_IRQn
+#define BUTTON3_Pin GPIO_PIN_5
+#define BUTTON3_GPIO_Port GPIOB
+#define BUTTON3_EXTI_IRQn EXTI9_5_IRQn
+#define BUTTON4_Pin GPIO_PIN_6
+#define BUTTON4_GPIO_Port GPIOB
+#define BUTTON4_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
