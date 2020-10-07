@@ -8,4 +8,4 @@ freertos.c:122:6:turn_off_motor	32	static
 freertos.c:135:6:smoothPWM	24	static
 freertos.c:185:6:MX_FREERTOS_Init	8	static
 freertos.c:228:6:StartDefaultTask	16	static
-freertos.c:256:6:StartTask02	16	static
+freertos.c:265:6:StartTask02	16	static

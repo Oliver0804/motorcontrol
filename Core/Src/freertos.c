@@ -229,16 +229,25 @@ void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
 	/* Infinite loop */
 	for (;;) {
-		//smoothPWM(1, 0, 1000, 10, 10);
-		if (buttom_flag == 1) {
-			//turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
-			//
-			turn_on_motor(20, 5000, 500, 1000);
+
+		if (buttom_flag == 1) {//按下1按鈕
+			/*
+			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
+			 * 第一個數值為緩啟動每次變化量時間 	預設50
+			 * 第二個數值時間					預設5000 = 5秒
+			 * 第三個緩請動最大輸出值			預設500
+			 * 第四個正常常模式下功率 			預設100%
+			 */
+			turn_on_motor(50, 5000, 500, 1000);
 			buttom_flag = 0;
-		} else if (buttom_flag == 2) {
+		} else if (buttom_flag == 2) {//按下2按鈕
 			//turn_off_motor(int slow_time,int time,int slow_pwm,int pwm)
-			turn_off_motor(20, 5000, 500, 1000);
+			turn_off_motor(50, 5000, 500, 1000);
 			buttom_flag = 0;
+		}else if(buttom_flag==3){//按鈕3
+
+		}else if(buttom_flag==4){//按鈕4
+
 		}
 		osDelay(1);
 
