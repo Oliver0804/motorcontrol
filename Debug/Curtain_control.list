@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  16 .debug_macro  000162fd  00000000  00000000  0003c480  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_line   00010912  00000000  00000000  0005277d  2**0
+ 17 .debug_line   00010914  00000000  00000000  0005277d  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    0007d779  00000000  00000000  0006308f  2**0
+ 18 .debug_str    0007d779  00000000  00000000  00063091  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  000e0808  2**0
+ 19 .comment      0000007b  00000000  00000000  000e080a  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004d10  00000000  00000000  000e0884  2**2
+ 20 .debug_frame  00004d10  00000000  00000000  000e0888  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -534,9 +534,10 @@ void stop_motor(void) {
  8000418:	40010800 	.word	0x40010800
 
 0800041c <turn_on_motor>:
-void lock_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
+	user_pwm_setvalue_1(0);
+	user_pwm_setvalue_2(0);
 }
 void turn_on_motor(int slow_time,int time,int slow_pwm,int pwm){
  800041c:	b580      	push	{r7, lr}
@@ -1669,8 +1670,8 @@ void MX_TIM2_Init(void)
   sConfigOC.Pulse = 0;
  8000a04:	2300      	movs	r3, #0
  8000a06:	60bb      	str	r3, [r7, #8]
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
- 8000a08:	2302      	movs	r3, #2
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+ 8000a08:	2300      	movs	r3, #0
  8000a0a:	60fb      	str	r3, [r7, #12]
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
  8000a0c:	2300      	movs	r3, #0
@@ -1861,8 +1862,8 @@ void user_pwm_setvalue_1(uint16_t value)
     sConfigOC.Pulse = value;
  8000b22:	88fb      	ldrh	r3, [r7, #6]
  8000b24:	613b      	str	r3, [r7, #16]
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
- 8000b26:	2302      	movs	r3, #2
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+ 8000b26:	2300      	movs	r3, #0
  8000b28:	617b      	str	r3, [r7, #20]
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
  8000b2a:	2300      	movs	r3, #0
@@ -1901,8 +1902,8 @@ void user_pwm_setvalue_2(uint16_t value)
     sConfigOC.Pulse = value;
  8000b5e:	88fb      	ldrh	r3, [r7, #6]
  8000b60:	613b      	str	r3, [r7, #16]
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
- 8000b62:	2302      	movs	r3, #2
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+ 8000b62:	2300      	movs	r3, #0
  8000b64:	617b      	str	r3, [r7, #20]
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
  8000b66:	2300      	movs	r3, #0

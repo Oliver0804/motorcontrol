@@ -109,6 +109,8 @@ void stop_motor(void) {
 void lock_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
+	user_pwm_setvalue_1(0);
+	user_pwm_setvalue_2(0);
 }
 void turn_on_motor(int slow_time,int time,int slow_pwm,int pwm){
 	zheng_zhuan();
@@ -227,6 +229,9 @@ void StartTask02(void *argument)
 		ad1 /= 50;
 		ad2 /= 50;
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		//user_pwm_setvalue_1(0);
+		//user_pwm_setvalue_2(0);
+
 	}
 
   /* USER CODE END StartTask02 */

@@ -3,8 +3,8 @@ freertos.c:95:6:zheng_zhuan	8	static
 freertos.c:99:6:fan_zhuan	8	static
 freertos.c:103:6:stop_motor	8	static
 freertos.c:109:6:lock_motor	8	static
-freertos.c:113:6:turn_on_motor	24	static
-freertos.c:125:6:turn_off_motor	24	static
-freertos.c:149:6:MX_FREERTOS_Init	8	static
-freertos.c:190:6:StartDefaultTask	16	static
-freertos.c:216:6:StartTask02	16	static
+freertos.c:115:6:turn_on_motor	24	static
+freertos.c:127:6:turn_off_motor	24	static
+freertos.c:151:6:MX_FREERTOS_Init	8	static
+freertos.c:192:6:StartDefaultTask	16	static
+freertos.c:218:6:StartTask02	16	static
