@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include "adc.h"
 #include "tim.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,7 +52,7 @@ int speed_flag = 2000;
 int timer_conut = 10;
 uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
-uint32_t real_adc1,real_adc2;
+uint32_t real_adc1, real_adc2;
 int i = 0;
 int buttom_flag = 0;
 /* USER CODE END Variables */
@@ -143,7 +144,7 @@ void smoothPWM(int channel, int start_val, int end_val, int step_size,
 				osDelay(step_time);
 				start_val = start_val + step_size;
 			}
-		}else{
+		} else {
 			while (start_val >= end_val) {
 				user_pwm_setvalue_1(start_val);
 				osDelay(step_time);
@@ -158,7 +159,7 @@ void smoothPWM(int channel, int start_val, int end_val, int step_size,
 				osDelay(step_time);
 				start_val = start_val + step_size;
 			}
-		}else{
+		} else {
 			while (start_val >= end_val) {
 				user_pwm_setvalue_2(start_val);
 				osDelay(step_time);
@@ -231,7 +232,7 @@ void StartDefaultTask(void *argument) {
 	/* Infinite loop */
 	for (;;) {
 
-		if (buttom_flag == 1) {//按下1按鈕
+		if (buttom_flag == 1) { //按下1按鈕
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
 			 * 第一個數值為緩啟動每次變化量時間 	預設50
@@ -240,9 +241,9 @@ void StartDefaultTask(void *argument) {
 			 * 第四個正常常模式下功率 			預設100%
 			 */
 			//turn_on_motor(50, 5000, 500, 1000);
-			turn_on_motor(real_adc1/50, 5000, real_adc1, 2000);
+			turn_on_motor(real_adc1 / 50, 5000, real_adc1, 2000);
 			buttom_flag = 0;
-		} else if (buttom_flag == 2) {//按下2按鈕
+		} else if (buttom_flag == 2) { //按下2按鈕
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
 			 * 第一個數值為緩啟動每次變化量時間 	預設50
@@ -251,11 +252,11 @@ void StartDefaultTask(void *argument) {
 			 * 第四個正常常模式下功率 			預設100%
 			 */
 			//turn_off_motor(50, 5000, 500, 1000);
-			turn_off_motor(real_adc1/50, 5000, real_adc1, 2000);
+			turn_off_motor(real_adc1 / 50, 5000, real_adc1, 2000);
 			buttom_flag = 0;
-		}else if(buttom_flag==3){//按鈕3
-
-		}else if(buttom_flag==4){//按鈕4
+		} else if (buttom_flag == 3) { //按鈕3
+			HAL_UART_Transmit(&huart2, "test", sizeof("test"), 1000);
+		} else if (buttom_flag == 4) { //按鈕4
 
 		}
 		osDelay(1);
@@ -281,8 +282,8 @@ void StartTask02(void *argument) {
 			ad2 += ADC_Value[i++];
 			osDelay(10);
 		}
-		real_adc1 =ad1 / 50;
-		real_adc2 =ad2 / 50;
+		real_adc1 = ad1 / 50;
+		real_adc2 = ad2 / 50;
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		//user_pwm_setvalue_1(0);
 		//user_pwm_setvalue_2(0);
