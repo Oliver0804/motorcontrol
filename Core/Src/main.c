@@ -28,6 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 
 /* USER CODE END Includes */
 
@@ -61,6 +62,15 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int remote_flag=0;
+int _write(int file , char *ptr,int len)
+{
+    int i = 0;
+    for(i = 0;i<len;i++)
+        ITM_SendChar((*ptr++));
+    return len;
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -96,7 +106,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  printf("testestset\n");
   /* USER CODE END 2 */
 
   /* Init scheduler */

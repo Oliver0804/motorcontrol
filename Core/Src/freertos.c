@@ -29,6 +29,8 @@
 #include "adc.h"
 #include "tim.h"
 #include "usart.h"
+#include "stdio.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,15 +60,23 @@ int buttom_flag = 0;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = { .name = "defaultTask",
-		.priority = (osPriority_t) osPriorityNormal, .stack_size = 128 * 4 };
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
 /* Definitions for myTaskoutput */
 osThreadId_t myTaskoutputHandle;
-const osThreadAttr_t myTaskoutput_attributes = { .name = "myTaskoutput",
-		.priority = (osPriority_t) osPriorityLow, .stack_size = 128 * 4 };
+const osThreadAttr_t myTaskoutput_attributes = {
+  .name = "myTaskoutput",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	switch (GPIO_Pin) {
 	case GPIO_PIN_3: // GPIO_PIN_13 is the Blue Button
@@ -180,43 +190,43 @@ void StartTask02(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
 void MX_FREERTOS_Init(void) {
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 	stop_motor();
-	/* USER CODE END Init */
+	printf("Helloworld!\n");
 
-	/* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE END Init */
+
+  /* USER CODE BEGIN RTOS_MUTEX */
 	/* add mutexes, ... */
-	/* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-	/* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
-	/* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-	/* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
 	/* start timers, add new ones, ... */
-	/* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-	/* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
 	/* add queues, ... */
-	/* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-	/* Create the thread(s) */
-	/* creation of defaultTask */
-	defaultTaskHandle = osThreadNew(StartDefaultTask, NULL,
-			&defaultTask_attributes);
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-	/* creation of myTaskoutput */
-	myTaskoutputHandle = osThreadNew(StartTask02, NULL,
-			&myTaskoutput_attributes);
+  /* creation of myTaskoutput */
+  myTaskoutputHandle = osThreadNew(StartTask02, NULL, &myTaskoutput_attributes);
 
-	/* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
-	/* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
 }
 
@@ -227,8 +237,9 @@ void MX_FREERTOS_Init(void) {
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
-	/* USER CODE BEGIN StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN StartDefaultTask */
 	/* Infinite loop */
 	for (;;) {
 
@@ -262,7 +273,7 @@ void StartDefaultTask(void *argument) {
 		osDelay(1);
 
 	}
-	/* USER CODE END StartDefaultTask */
+  /* USER CODE END StartDefaultTask */
 }
 
 /* USER CODE BEGIN Header_StartTask02 */
@@ -272,8 +283,9 @@ void StartDefaultTask(void *argument) {
  * @retval None
  */
 /* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument) {
-	/* USER CODE BEGIN StartTask02 */
+void StartTask02(void *argument)
+{
+  /* USER CODE BEGIN StartTask02 */
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) &ADC_Value, 100);
 	/* Infinite loop */
 	for (;;) {
@@ -284,13 +296,14 @@ void StartTask02(void *argument) {
 		}
 		real_adc1 = ad1 / 50;
 		real_adc2 = ad2 / 50;
+		printf("ADC:%d\n",real_adc1);
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		//user_pwm_setvalue_1(0);
 		//user_pwm_setvalue_2(0);
 
 	}
 
-	/* USER CODE END StartTask02 */
+  /* USER CODE END StartTask02 */
 }
 
 /* Private application code --------------------------------------------------*/
