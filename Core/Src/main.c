@@ -61,7 +61,7 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int remote_flag=0;
+
 int _write(int file , char *ptr,int len)
 {
     int i = 0;

@@ -56,7 +56,11 @@ uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
 uint32_t real_adc1, real_adc2;
 int i = 0;
-int buttom_flag = 0;
+int buttom_flag[5]= {0};
+
+int sys_mode=0;
+int sys_setting=0;
+int motor_dir=0;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -72,6 +76,13 @@ const osThreadAttr_t myTaskoutput_attributes = {
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
+/* Definitions for myTask_BUTTON */
+osThreadId_t myTask_BUTTONHandle;
+const osThreadAttr_t myTask_BUTTON_attributes = {
+  .name = "myTask_BUTTON",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -79,22 +90,28 @@ const osThreadAttr_t myTaskoutput_attributes = {
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	switch (GPIO_Pin) {
-	case GPIO_PIN_3: // GPIO_PIN_13 is the Blue Button
+	case GPIO_PIN_4: // GPIO_PIN_13 is the Blue Button
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
-		buttom_flag = 1;
-		break;
-	case GPIO_PIN_4:
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
-		buttom_flag = 2;
+		buttom_flag[1]++;
 		break;
 	case GPIO_PIN_5:
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
-		buttom_flag = 3;
+		buttom_flag[2]++;
 		break;
 	case GPIO_PIN_6:
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
-		buttom_flag = 4;
+		buttom_flag[3]++;
 		break;
+	case GPIO_PIN_7:
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13); //PC13 Led
+		buttom_flag[4]++;
+		break;
+	}
+}
+
+void clean_buttom_flag(void){
+	for(i=0;i>=4;i++){//clean flag
+		buttom_flag[i]=0;
 	}
 }
 
@@ -106,11 +123,27 @@ void fan_zhuan(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
 }
+
+void run_motor(int dir,int slow_flag){
+	if(dir==0){
+		fan_zhuan();
+	}else if(dir==1){
+		zheng_zhuan();
+	}
+}
+void point_motor(void){//上下點動
+	fan_zhuan();
+	stop_motor();
+	zheng_zhuan();
+	stop_motor();
+	clean_buttom_flag();
+}
 void stop_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
 	user_pwm_setvalue_1(0);
 	user_pwm_setvalue_2(0);
+	osDelay(100);
 }
 void lock_motor(void) {
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
@@ -143,6 +176,7 @@ void turn_off_motor(int slow_time, int time, int slow_pwm, int pwm) {
 	stop_motor();
 
 }
+
 
 void smoothPWM(int channel, int start_val, int end_val, int step_size,
 		int step_time) {
@@ -182,10 +216,36 @@ void smoothPWM(int channel, int start_val, int end_val, int step_size,
 	}
 }
 
+void auto_limits(int setting_mode){
+	switch(setting_mode){
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	default:
+		printf("auto limits error\n");
+	}
+}
+void save_limits_set(int save_data){
+	switch(save_data){
+	case 0:
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	default:
+		printf("save data mode error\n");
+	}
+}
+
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
+void StartTask03(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -197,7 +257,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 	stop_motor();
-	printf("Helloworld!\n");
+	//printf("Helloworld!\n");
 
   /* USER CODE END Init */
 
@@ -224,6 +284,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of myTaskoutput */
   myTaskoutputHandle = osThreadNew(StartTask02, NULL, &myTaskoutput_attributes);
 
+  /* creation of myTask_BUTTON */
+  myTask_BUTTONHandle = osThreadNew(StartTask03, NULL, &myTask_BUTTON_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -243,7 +306,7 @@ void StartDefaultTask(void *argument)
 	/* Infinite loop */
 	for (;;) {
 
-		if (buttom_flag == 1) { //按下1按鈕
+		if (buttom_flag[1] > 0) { //按下1按鈕
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
 			 * 第一個數值為緩啟動每次變化量時間 	預設50
@@ -253,8 +316,8 @@ void StartDefaultTask(void *argument)
 			 */
 			//turn_on_motor(50, 5000, 500, 1000);
 			turn_on_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			buttom_flag = 0;
-		} else if (buttom_flag == 2) { //按下2按鈕
+			buttom_flag[1] = 0;
+		} else if (buttom_flag[2] > 0) { //按下2按鈕
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
 			 * 第一個數值為緩啟動每次變化量時間 	預設50
@@ -264,10 +327,10 @@ void StartDefaultTask(void *argument)
 			 */
 			//turn_off_motor(50, 5000, 500, 1000);
 			turn_off_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			buttom_flag = 0;
-		} else if (buttom_flag == 3) { //按鈕3
+			buttom_flag[2] = 0;
+		} else if (buttom_flag[3] > 0) { //按鈕3
 			HAL_UART_Transmit(&huart2, "test", sizeof("test"), 1000);
-		} else if (buttom_flag == 4) { //按鈕4
+		} else if (buttom_flag[4]>0) { //按鈕4
 
 		}
 		osDelay(1);
@@ -304,6 +367,81 @@ void StartTask02(void *argument)
 	}
 
   /* USER CODE END StartTask02 */
+}
+
+/* USER CODE BEGIN Header_StartTask03 */
+/**
+* @brief Function implementing the myTask_BUTTON thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask03 */
+void StartTask03(void *argument)
+{
+  /* USER CODE BEGIN StartTask03 */
+  /* Infinite loop */
+  for(;;)
+  {
+	if(buttom_flag[4]>0){//jump setting
+		sys_setting=0;
+		point_motor();
+	}
+
+	if(buttom_flag[1]>0&&buttom_flag[3]>0){//into setting mode
+		sys_setting=1;
+		point_motor();
+		while(sys_setting>0){
+			if(buttom_flag[2]>0&&sys_setting==1){//改變旋轉方向
+				point_motor();
+				if(motor_dir==1){
+					motor_dir=0;
+				}else{
+					motor_dir=1;
+				}
+			}
+			if(buttom_flag[2]){
+				save_limits_set(0);
+				point_motor();
+			}
+			if(buttom_flag[4]>0){//exit setting
+				point_motor();
+				sys_setting=0;
+				break;
+			}
+			if(buttom_flag[1]>0&&buttom_flag[3]>0){//Auto set Both limits
+				sys_setting=2;
+				auto_limits(1);
+				sys_setting=1;
+			}else if(buttom_flag[2]>0&&buttom_flag[3]>0){//Top limit Set by user
+				sys_setting=3;
+				run_motor(motor_dir, 0);
+				while(1){//keep run
+					if(buttom_flag[2]>0){
+						stop_motor();
+						save_limits_set(2);
+						sys_setting=1;
+						osDelay(1);
+					}
+				}
+			}else if(buttom_flag[1]>0&&buttom_flag[2]>0){//Bottom limit Set by user
+				sys_setting=4;
+				run_motor(abs(motor_dir-1), 0);
+				while(1){//keep run
+					if(buttom_flag[2]>0){
+						stop_motor();
+						save_limits_set(3);
+						sys_setting=1;
+						osDelay(1);
+					}
+				}
+			}
+		osDelay(250);
+		}
+	}
+
+    osDelay(250);
+  }
+  /* USER CODE END StartTask03 */
 }
 
 /* Private application code --------------------------------------------------*/
