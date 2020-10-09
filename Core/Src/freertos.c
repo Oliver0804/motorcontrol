@@ -61,6 +61,8 @@ int buttom_flag[5]= {0};
 int sys_mode=0;
 int sys_setting=0;
 int motor_dir=0;
+uint8_t txData[] = {"HelloWorld\r\n"};
+uint8_t rxData[] = {0};
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -88,6 +90,8 @@ const osThreadAttr_t myTask_BUTTON_attributes = {
 /* USER CODE BEGIN FunctionPrototypes */
 
 
+
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	switch (GPIO_Pin) {
 	case GPIO_PIN_4: // GPIO_PIN_13 is the Blue Button
@@ -110,7 +114,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void clean_buttom_flag(void){
-	for(i=0;i>=4;i++){//clean flag
+	for(i=0;i<=5;i++){//clean flag
 		buttom_flag[i]=0;
 	}
 }
@@ -256,8 +260,17 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-	stop_motor();
+	//stop_motor();
 	//printf("Helloworld!\n");
+	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
+	user_pwm_setvalue_1(0);
+	user_pwm_setvalue_2(0);
+	if(HAL_UART_Receive_DMA(&huart2, (uint8_t *)rxData, sizeof(rxData)-1) != HAL_OK)//main函数while(1)前，启动一次DMA接收
+	    {
+	        Error_Handler();
+	    }
+	HAL_UART_Transmit_DMA(&huart2,"Sys Run\n",sizeof("Sys Run\n")-1);//可以通过DMA把数据发出去
 
   /* USER CODE END Init */
 
@@ -316,7 +329,7 @@ void StartDefaultTask(void *argument)
 			 */
 			//turn_on_motor(50, 5000, 500, 1000);
 			turn_on_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			buttom_flag[1] = 0;
+			clean_buttom_flag();
 		} else if (buttom_flag[2] > 0) { //按下2按鈕
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
@@ -327,11 +340,16 @@ void StartDefaultTask(void *argument)
 			 */
 			//turn_off_motor(50, 5000, 500, 1000);
 			turn_off_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			buttom_flag[2] = 0;
+			//buttom_flag[2] = 0;
+			clean_buttom_flag();
 		} else if (buttom_flag[3] > 0) { //按鈕3
-			HAL_UART_Transmit(&huart2, "test", sizeof("test"), 1000);
-		} else if (buttom_flag[4]>0) { //按鈕4
+			//HAL_UART_Transmit(&huart2, "test", sizeof("test"), 100);
+			HAL_UART_Transmit_DMA(&huart2,"test",sizeof("test")-1);
 
+			clean_buttom_flag();
+
+		} else if (buttom_flag[4]>0) { //按鈕4
+			clean_buttom_flag();
 		}
 		osDelay(1);
 
@@ -359,12 +377,13 @@ void StartTask02(void *argument)
 		}
 		real_adc1 = ad1 / 50;
 		real_adc2 = ad2 / 50;
-		printf("ADC:%d\n",real_adc1);
+		//printf("ADC:%d\n",real_adc1);
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		//user_pwm_setvalue_1(0);
 		//user_pwm_setvalue_2(0);
 
 	}
+	HAL_UART_Transmit_DMA(&huart2,"Sys Run\n",sizeof("Sys Run\n")-1);//可以通过DMA把数据发出去
 
   /* USER CODE END StartTask02 */
 }
@@ -382,6 +401,9 @@ void StartTask03(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  while(1){
+		  osDelay(1);
+	  }
 	if(buttom_flag[4]>0){//jump setting
 		sys_setting=0;
 		point_motor();

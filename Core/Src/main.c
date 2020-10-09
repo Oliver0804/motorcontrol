@@ -61,13 +61,26 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+/*
 int _write(int file , char *ptr,int len)
 {
     int i = 0;
     for(i = 0;i<len;i++)
         ITM_SendChar((*ptr++));
     return len;
+}
+
+*/
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
+
+PUTCHAR_PROTOTYPE
+{
+    HAL_UART_Transmit(&huart2 , (uint8_t *)&ch, 1, 0xFFFF);
+    return ch;
 }
 
 
@@ -106,7 +119,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  printf("testestset\n");
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
