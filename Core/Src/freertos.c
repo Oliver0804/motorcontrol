@@ -69,8 +69,6 @@ int sys_mode = 0;
 int sys_setting = 0;
 int motor_dir = 0;
 
-
-
 uint8_t rxData[] = { 0 };
 uint8_t UartTxBuf[100];
 
@@ -438,7 +436,7 @@ void StartDefaultTask(void *argument) {
 	/* Infinite loop */
 	for (;;) {
 		osDelay(1000);
-		while(sys_setting==1){
+		while (sys_setting == 1) {
 			osDelay(10);
 		}
 		if (sys_mode == 1) {
@@ -447,21 +445,24 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 0, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			stop_motor();
@@ -474,21 +475,24 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 1, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if(buttom_flag[2]>0)break;
+				if (buttom_flag[2] > 0)
+					break;
 				osDelay(1);
 			}
 			stop_motor();
@@ -558,6 +562,41 @@ void StartTask03(void *argument) {
 			clean_buttom_flag();
 			point_motor();
 			while (sys_setting > 0) {
+
+				if (buttom_flag[1] > 0 && buttom_flag[3] > 0) { //Auto set Both limits
+					clean_buttom_flag();
+					sys_setting = 2;
+					auto_limits(1);
+					//sys_setting = 1;
+				} else if (buttom_flag[2] > 0 && buttom_flag[3] > 0) { //Top limit Set by user
+					clean_buttom_flag();
+					sys_setting = 3;
+					run_motor(motor_dir, 1, 0);
+					while (1) {                        //keep run
+						clean_buttom_flag();
+						if (buttom_flag[2] > 0) {
+							stop_motor();
+							save_limits_set(2);
+							sys_setting = 1;
+							break;
+						}
+						osDelay(1);
+					}
+				} else if (buttom_flag[1] > 0 && buttom_flag[2] > 0) { //Bottom limit Set by user
+					clean_buttom_flag();
+					sys_setting = 4;
+					run_motor(abs(motor_dir - 1), 0, 0);
+					while (1) {                        //keep run
+						clean_buttom_flag();
+						if (buttom_flag[2] > 0) {
+							stop_motor();
+							save_limits_set(3);
+							sys_setting = 1;
+							break;
+						}
+						osDelay(1);
+					}
+				}
 				if (buttom_flag[2] > 0 && sys_setting == 1) {           //改變旋轉方向
 					point_motor();
 					if (motor_dir == 1) {
@@ -574,33 +613,6 @@ void StartTask03(void *argument) {
 					point_motor();
 					sys_setting = 0;
 					break;
-				}
-				if (buttom_flag[1] > 0 && buttom_flag[3] > 0) { //Auto set Both limits
-					sys_setting = 2;
-					auto_limits(1);
-					sys_setting = 1;
-				} else if (buttom_flag[2] > 0 && buttom_flag[3] > 0) { //Top limit Set by user
-					sys_setting = 3;
-					run_motor(motor_dir, 1, 0);
-					while (1) {                        //keep run
-						if (buttom_flag[2] > 0) {
-							stop_motor();
-							save_limits_set(2);
-							sys_setting = 1;
-							osDelay(1);
-						}
-					}
-				} else if (buttom_flag[1] > 0 && buttom_flag[2] > 0) { //Bottom limit Set by user
-					sys_setting = 4;
-					run_motor(abs(motor_dir - 1), 0, 0);
-					while (1) {                        //keep run
-						if (buttom_flag[2] > 0) {
-							stop_motor();
-							save_limits_set(3);
-							sys_setting = 1;
-							osDelay(1);
-						}
-					}
 				}
 				osDelay(250);
 			}
