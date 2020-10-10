@@ -51,23 +51,26 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-int speed_flag = 2000;
-int timer_conut = 10;
-int run_time_n = 5000;
-int run_time_s = 1000;
-int run_pwm_n = 2000;
-int run_pwm_s = 100;
+int timer_conut = 0;
+int run_time_n = 5000; 	//全速功率-秒數
+int run_time_s = 1000; 	//慢速功率-秒數
+int run_pwm_n = 2000;	//全速功率
+int run_pwm_s = 100;	//慢速功率
+int smooth_mode = 1; 	//緩速模式 0-關閉 1-開啟
 
 uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
 uint32_t real_adc1, real_adc2;
+
 int i = 0;
 int buttom_flag[5] = { 0 };
 
 int sys_mode = 0;
 int sys_setting = 0;
 int motor_dir = 0;
-int smooth_mode = 1;
+
+
+
 uint8_t rxData[] = { 0 };
 uint8_t UartTxBuf[100];
 
@@ -336,13 +339,13 @@ void print_sysinfo(int mode) {
 		Usart2DmaPrintf("| Sys time : %d\n", xTaskGetTickCount());
 		Usart2DmaPrintf("| Mode:\t%d  \t\tSetMode:\t\t%d  \t|\n", sys_mode,
 				sys_setting);
-		Usart2DmaPrintf("| mdir:\t%d  \t\tSmoothMode:\t%d  \t|\n", motor_dir,
+		Usart2DmaPrintf("| m_dir:\t%d  \t\tSmoothMode:\t%d  \t|\n", motor_dir,
 				smooth_mode);
-		Usart2DmaPrintf("| TimeN:\t%d  \t\tTimeSlow:\t\t%d  \t|\n", run_time_n,
+		Usart2DmaPrintf("| TimeN:\t%dms\tTimeSlow:\t%dms\t|\n", run_time_n,
 				run_time_s);
 		Usart2DmaPrintf("| pwmN:\t%d  \tPWNSlow:\t%d  \t|\n", run_pwm_n,
 				run_pwm_s);
-		Usart2DmaPrintf("| Buttom Flag:[%d][%d][%d][%d] \t\t\t|\n",
+		Usart2DmaPrintf("| Buttom Flag:[%d] [%d] [%d] [%d] \t\t\t|\n",
 				buttom_flag[1], buttom_flag[2], buttom_flag[3], buttom_flag[4]);
 		Usart2DmaPrintf("| ADC1:\t%d  \tADC2:\t%d \t\t|\n", real_adc1,
 				real_adc2);
@@ -435,24 +438,30 @@ void StartDefaultTask(void *argument) {
 	/* Infinite loop */
 	for (;;) {
 		osDelay(1000);
+		while(sys_setting==1){
+			osDelay(10);
+		}
 		if (sys_mode == 1) {
 			//clean_buttom_flag();
 			timer_conut = 0;
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 0, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			stop_motor();
@@ -465,18 +474,21 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 1, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			timer_conut = 0;
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
+				if(buttom_flag[2]>0)break;
 				osDelay(1);
 			}
 			stop_motor();
