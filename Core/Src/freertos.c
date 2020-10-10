@@ -53,6 +53,12 @@
 /* USER CODE BEGIN Variables */
 int speed_flag = 2000;
 int timer_conut = 10;
+int run_time_n=0;
+int run_time_s=0;
+int run_pwm_n=2000;
+int run_pwm_s=500;
+
+
 uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
 uint32_t real_adc1, real_adc2;
@@ -62,7 +68,7 @@ int buttom_flag[5]= {0};
 int sys_mode=0;
 int sys_setting=0;
 int motor_dir=0;
-uint8_t txData[] = {"HelloWorld\r\n"};
+int smooth_mode=0;
 uint8_t rxData[] = {0};
 uint8_t UartTxBuf[100];
 /* USER CODE END Variables */
@@ -100,7 +106,7 @@ void Usart2DmaPrintf(const char *format,...)
 	len = vsnprintf((char*)UartTxBuf,sizeof(UartTxBuf)+1,(char*)format,args);
 	va_end(args);
 	HAL_UART_Transmit_DMA(&huart2, UartTxBuf, len);
-	osDelay(10);
+	osDelay(10);//避免資料穿插
 
 }
 
@@ -274,9 +280,12 @@ void print_sysinfo(int mode){
 	switch(mode){
 	case 0://All
 		Usart2DmaPrintf("\n==============================\n");
-		Usart2DmaPrintf("Mode:\t%d  \tSetMode:\t%d  \n",sys_mode,sys_setting);
-		Usart2DmaPrintf("mdir:\t%d  \info:\t%d  \n",motor_dir,0);
-		Usart2DmaPrintf("ADC1:\t%d  \tADC2:\t%d  \n",real_adc1,real_adc2);
+		Usart2DmaPrintf("| Mode:\t%d  \t\tSetMode:\t\t%d  \t|\n",sys_mode,sys_setting);
+		Usart2DmaPrintf("| mdir:\t%d  \t\tSmoothMode:\t%d  \t|\n",motor_dir,smooth_mode);
+		Usart2DmaPrintf("| TimeN:\t%d  \t\tTimeSlow:\t\t%d  \t|\n",run_time_n,run_time_s);
+		Usart2DmaPrintf("| pwmN:\t%d  \tPWNSlow:\t%d  \t|\n",run_pwm_n,run_pwm_s);
+		Usart2DmaPrintf("| Buttom Flag:[%d][%d][%d][%d] \t\t\t|\n",buttom_flag[1],buttom_flag[2],buttom_flag[3],buttom_flag[4]);
+		Usart2DmaPrintf("| ADC1:\t%d  \tADC2:\t%d \t\t|\n",real_adc1,real_adc2);
 		Usart2DmaPrintf("==============================\n");
 		break;
 	case 1:
