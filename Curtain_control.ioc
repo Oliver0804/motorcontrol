@@ -105,6 +105,7 @@ NVIC.SavedPendsvIrqHandlerGenerated=true
 NVIC.SavedSvcallIrqHandlerGenerated=true
 NVIC.SavedSystickIrqHandlerGenerated=true
 NVIC.SysTick_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:true
+NVIC.USART2_IRQn=true\:1\:0\:true\:false\:true\:false\:true\:true
 NVIC.UsageFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 PA11.GPIOParameters=GPIO_Label
 PA11.GPIO_Label=LED2

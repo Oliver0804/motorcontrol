@@ -61,7 +61,7 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
+
 int _write(int file , char *ptr,int len)
 {
     int i = 0;
@@ -70,7 +70,9 @@ int _write(int file , char *ptr,int len)
     return len;
 }
 
-*/
+
+/*
+ * hUART2
 #ifdef __GNUC__
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #else
@@ -82,7 +84,7 @@ PUTCHAR_PROTOTYPE
     HAL_UART_Transmit(&huart2 , (uint8_t *)&ch, 1, 0xFFFF);
     return ch;
 }
-
+*/
 
 /* USER CODE END 0 */
 

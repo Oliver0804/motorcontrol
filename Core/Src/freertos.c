@@ -30,6 +30,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "stdio.h"
+#include "stdarg.h"
 
 /* USER CODE END Includes */
 
@@ -63,6 +64,7 @@ int sys_setting=0;
 int motor_dir=0;
 uint8_t txData[] = {"HelloWorld\r\n"};
 uint8_t rxData[] = {0};
+uint8_t UartTxBuf[100];
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -90,6 +92,17 @@ const osThreadAttr_t myTask_BUTTON_attributes = {
 /* USER CODE BEGIN FunctionPrototypes */
 
 
+void Usart2DmaPrintf(const char *format,...)
+{
+	uint16_t len;
+	va_list args;
+	va_start(args,format);
+	len = vsnprintf((char*)UartTxBuf,sizeof(UartTxBuf)+1,(char*)format,args);
+	va_end(args);
+	HAL_UART_Transmit_DMA(&huart2, UartTxBuf, len);
+	osDelay(10);
+
+}
 
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
@@ -114,21 +127,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void clean_buttom_flag(void){
+	HAL_UART_Transmit_DMA(&huart2,"clean_buttom_flag\n",sizeof("clean_buttom_flag\n")-1);
 	for(i=0;i<=5;i++){//clean flag
 		buttom_flag[i]=0;
 	}
 }
 
 void zheng_zhuan(void) {
+	HAL_UART_Transmit_DMA(&huart2,"zheng_zhuan\n",sizeof("zheng_zhuan\n")-1);
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
 }
 void fan_zhuan(void) {
+	HAL_UART_Transmit_DMA(&huart2,"fan_zhuan\n",sizeof("fan_zhuan\n")-1);
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
 }
 
 void run_motor(int dir,int slow_flag){
+	HAL_UART_Transmit_DMA(&huart2,"run_motor\n",sizeof("run_motor\n")-1);
 	if(dir==0){
 		fan_zhuan();
 	}else if(dir==1){
@@ -136,6 +153,7 @@ void run_motor(int dir,int slow_flag){
 	}
 }
 void point_motor(void){//上下點動
+	HAL_UART_Transmit_DMA(&huart2,"point_motor\n",sizeof("point_motor\n")-1);
 	fan_zhuan();
 	stop_motor();
 	zheng_zhuan();
@@ -143,6 +161,7 @@ void point_motor(void){//上下點動
 	clean_buttom_flag();
 }
 void stop_motor(void) {
+	HAL_UART_Transmit_DMA(&huart2,"stop_motor\n",sizeof("stop_motor\n")-1);
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
 	user_pwm_setvalue_1(0);
@@ -150,6 +169,7 @@ void stop_motor(void) {
 	osDelay(100);
 }
 void lock_motor(void) {
+	HAL_UART_Transmit_DMA(&huart2,"lock_motor\n",sizeof("lock_motor\n")-1);
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
 	user_pwm_setvalue_1(0);
@@ -221,6 +241,8 @@ void smoothPWM(int channel, int start_val, int end_val, int step_size,
 }
 
 void auto_limits(int setting_mode){
+	HAL_UART_Transmit_DMA(&huart2,"auto_limits\n",sizeof("auto_limits\n")-1);
+
 	switch(setting_mode){
 	case 1:
 		break;
@@ -233,8 +255,29 @@ void auto_limits(int setting_mode){
 	}
 }
 void save_limits_set(int save_data){
+	HAL_UART_Transmit_DMA(&huart2,"save_limits_set\n",sizeof("save_limits_set\n")-1);
+
 	switch(save_data){
 	case 0:
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	default:
+		printf("save data mode error\n");
+	}
+}
+
+void print_sysinfo(int mode){
+
+	switch(mode){
+	case 0://All
+		Usart2DmaPrintf("\n==============================\n");
+		Usart2DmaPrintf("Mode:\t%d  \tSetMode:\t%d  \n",sys_mode,sys_setting);
+		Usart2DmaPrintf("mdir:\t%d  \info:\t%d  \n",motor_dir,0);
+		Usart2DmaPrintf("ADC1:\t%d  \tADC2:\t%d  \n",real_adc1,real_adc2);
+		Usart2DmaPrintf("==============================\n");
 		break;
 	case 1:
 		break;
@@ -329,8 +372,10 @@ void StartDefaultTask(void *argument)
 			 */
 			//turn_on_motor(50, 5000, 500, 1000);
 			turn_on_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			clean_buttom_flag();
+			//clean_buttom_flag();
 		} else if (buttom_flag[2] > 0) { //按下2按鈕
+
+		} else if (buttom_flag[3] > 0) { //按鈕3
 			/*
 			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
 			 * 第一個數值為緩啟動每次變化量時間 	預設50
@@ -341,15 +386,11 @@ void StartDefaultTask(void *argument)
 			//turn_off_motor(50, 5000, 500, 1000);
 			turn_off_motor(real_adc1 / 50, 5000, real_adc1, 2000);
 			//buttom_flag[2] = 0;
-			clean_buttom_flag();
-		} else if (buttom_flag[3] > 0) { //按鈕3
-			//HAL_UART_Transmit(&huart2, "test", sizeof("test"), 100);
-			HAL_UART_Transmit_DMA(&huart2,"test",sizeof("test")-1);
+			//clean_buttom_flag();
 
-			clean_buttom_flag();
 
 		} else if (buttom_flag[4]>0) { //按鈕4
-			clean_buttom_flag();
+			//clean_buttom_flag();
 		}
 		osDelay(1);
 
@@ -377,13 +418,11 @@ void StartTask02(void *argument)
 		}
 		real_adc1 = ad1 / 50;
 		real_adc2 = ad2 / 50;
-		//printf("ADC:%d\n",real_adc1);
 		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		//user_pwm_setvalue_1(0);
 		//user_pwm_setvalue_2(0);
-
+		print_sysinfo(0);
 	}
-	HAL_UART_Transmit_DMA(&huart2,"Sys Run\n",sizeof("Sys Run\n")-1);//可以通过DMA把数据发出去
 
   /* USER CODE END StartTask02 */
 }
@@ -398,12 +437,12 @@ void StartTask02(void *argument)
 void StartTask03(void *argument)
 {
   /* USER CODE BEGIN StartTask03 */
+	int count=0;
   /* Infinite loop */
   for(;;)
   {
-	  while(1){
-		  osDelay(1);
-	  }
+
+	 // Usart2DmaPrintf("test...%d\n",count++);
 	if(buttom_flag[4]>0){//jump setting
 		sys_setting=0;
 		point_motor();
@@ -458,6 +497,8 @@ void StartTask03(void *argument)
 				}
 			}
 		osDelay(250);
+		//HAL_UART_Transmit_DMA(&huart2,"Setting mode: %d\n",sys_setting,sizeof("stop_motor\n")-1);
+
 		}
 	}
 
