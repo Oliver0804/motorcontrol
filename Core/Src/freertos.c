@@ -53,10 +53,10 @@
 /* USER CODE BEGIN Variables */
 int speed_flag = 2000;
 int timer_conut = 10;
-int run_time_n = 0;
-int run_time_s = 0;
+int run_time_n = 5000;
+int run_time_s = 1000;
 int run_pwm_n = 2000;
-int run_pwm_s = 500;
+int run_pwm_s = 100;
 
 uint32_t ADC_Value[100];
 uint32_t ad1, ad2;
@@ -67,7 +67,7 @@ int buttom_flag[5] = { 0 };
 int sys_mode = 0;
 int sys_setting = 0;
 int motor_dir = 0;
-int smooth_mode = 0;
+int smooth_mode = 1;
 uint8_t rxData[] = { 0 };
 uint8_t UartTxBuf[100];
 
@@ -85,7 +85,7 @@ const osThreadAttr_t myTaskoutput_attributes = { .name = "myTaskoutput",
 /* Definitions for myTask_BUTTON */
 osThreadId_t myTask_BUTTONHandle;
 const osThreadAttr_t myTask_BUTTON_attributes = { .name = "myTask_BUTTON",
-		.priority = (osPriority_t) osPriorityLow, .stack_size = 128 * 4 };
+		.priority = (osPriority_t) osPriorityLow - 1, .stack_size = 128 * 4 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -154,59 +154,91 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void clean_buttom_flag(void) {
-	HAL_UART_Transmit_DMA(&huart2, "clean_buttom_flag\n",
-			sizeof("clean_buttom_flag\n") - 1);
+	//Usart2DmaPrintf("clena\n");
 	for (i = 0; i <= 5; i++) { //clean flag
 		buttom_flag[i] = 0;
+		osDelay(1);
 	}
 }
 
-void zheng_zhuan(void) {
-	HAL_UART_Transmit_DMA(&huart2, "zheng_zhuan\n",
-			sizeof("zheng_zhuan\n") - 1);
+void zheng_zhuan(int pwm) {
+	//HAL_UART_Transmit_DMA(&huart2, "zheng_zhuan\n",sizeof("zheng_zhuan\n") - 1);
+	Usart2DmaPrintf("zheng_zhuan\n");
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
+	user_pwm_setvalue_1(pwm);
 }
-void fan_zhuan(void) {
-	HAL_UART_Transmit_DMA(&huart2, "fan_zhuan\n", sizeof("fan_zhuan\n") - 1);
+void fan_zhuan(int pwm) {
+	//HAL_UART_Transmit_DMA(&huart2, "fan_zhuan\n", sizeof("fan_zhuan\n") - 1);
+	Usart2DmaPrintf("fan_zhuan\n");
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
-}
-
-void run_motor(int dir, int slow_flag) {
-	HAL_UART_Transmit_DMA(&huart2, "run_motor\n", sizeof("run_motor\n") - 1);
-	if (dir == 0) {
-		fan_zhuan();
-	} else if (dir == 1) {
-		zheng_zhuan();
-	}
-}
-void point_motor(void) { //上下點動
-	HAL_UART_Transmit_DMA(&huart2, "point_motor\n",
-			sizeof("point_motor\n") - 1);
-	fan_zhuan();
-	stop_motor();
-	zheng_zhuan();
-	stop_motor();
-	clean_buttom_flag();
+	user_pwm_setvalue_2(pwm);
 }
 void stop_motor(void) {
-	HAL_UART_Transmit_DMA(&huart2, "stop_motor\n", sizeof("stop_motor\n") - 1);
+	//HAL_UART_Transmit_DMA(&huart2, "stop_motor\n", sizeof("stop_motor\n") - 1);
+	Usart2DmaPrintf("stop_motor\n");
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_RESET);
 	user_pwm_setvalue_1(0);
 	user_pwm_setvalue_2(0);
 	osDelay(100);
 }
+void run_motor(int dir, int action, int slow_flag) {
+	//HAL_UART_Transmit_DMA(&huart2, "run_motor\n", sizeof("run_motor\n") - 1);
+	Usart2DmaPrintf("run_motor\n");
+	if (action == 0) { //關門
+		if (dir == 0) {
+			if (slow_flag == 1) {
+				zheng_zhuan(run_pwm_s);
+			} else {
+				zheng_zhuan(run_pwm_n);
+			}
+		} else if (dir == 1) {
+			if (slow_flag == 1) {
+				fan_zhuan(run_pwm_s);
+			} else {
+				fan_zhuan(run_pwm_n);
+			}
+		}
+	} else if (action == 1) { //開門
+		if (dir == 0) {
+			if (slow_flag == 1) {
+				fan_zhuan(run_pwm_s);
+			} else {
+				fan_zhuan(run_pwm_n);
+			}
+		} else if (dir == 1) {
+			if (slow_flag == 1) {
+				zheng_zhuan(run_pwm_s);
+			} else {
+				zheng_zhuan(run_pwm_n);
+			}
+		}
+	}
+	//fan_zhuan(run_pwm_n);
+
+}
+void point_motor(void) { //上下點動
+	//HAL_UART_Transmit_DMA(&huart2, "point_motor\n",sizeof("point_motor\n") - 1);
+	Usart2DmaPrintf("point_motor\n");
+	fan_zhuan(run_pwm_n);
+	stop_motor();
+	zheng_zhuan(run_pwm_n);
+	stop_motor();
+	clean_buttom_flag();
+}
+
 void lock_motor(void) {
-	HAL_UART_Transmit_DMA(&huart2, "lock_motor\n", sizeof("lock_motor\n") - 1);
+	Usart2DmaPrintf("lock_motor\n");
+	//HAL_UART_Transmit_DMA(&huart2, "lock_motor\n", sizeof("lock_motor\n") - 1);
 	HAL_GPIO_WritePin(MC_1_GPIO_Port, MC_1_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(MC_2_GPIO_Port, MC_2_Pin, GPIO_PIN_SET);
 	user_pwm_setvalue_1(0);
 	user_pwm_setvalue_2(0);
 }
 void turn_on_motor(int slow_time, int time, int slow_pwm, int pwm) {
-	zheng_zhuan();
+	zheng_zhuan(pwm);
 	smoothPWM(1, 0, slow_pwm, 10, slow_time);
 	//user_pwm_setvalue_1(slow_pwm);
 	user_pwm_setvalue_1(pwm);
@@ -219,7 +251,7 @@ void turn_on_motor(int slow_time, int time, int slow_pwm, int pwm) {
 }
 
 void turn_off_motor(int slow_time, int time, int slow_pwm, int pwm) {
-	fan_zhuan();
+	fan_zhuan(pwm);
 	smoothPWM(2, 0, slow_pwm, 10, slow_time);
 	//user_pwm_setvalue_2(slow_pwm);
 	user_pwm_setvalue_2(pwm);
@@ -270,9 +302,7 @@ void smoothPWM(int channel, int start_val, int end_val, int step_size,
 }
 
 void auto_limits(int setting_mode) {
-	HAL_UART_Transmit_DMA(&huart2, "auto_limits\n",
-			sizeof("auto_limits\n") - 1);
-
+	Usart2DmaPrintf("auto_limits\n");
 	switch (setting_mode) {
 	case 1:
 		break;
@@ -285,9 +315,7 @@ void auto_limits(int setting_mode) {
 	}
 }
 void save_limits_set(int save_data) {
-	HAL_UART_Transmit_DMA(&huart2, "save_limits_set\n",
-			sizeof("save_limits_set\n") - 1);
-
+	Usart2DmaPrintf("save_limits_set\n");
 	switch (save_data) {
 	case 0:
 		break;
@@ -305,7 +333,7 @@ void print_sysinfo(int mode) {
 	switch (mode) {
 	case 0: //All
 		Usart2DmaPrintf("\n==============================\n");
-		Usart2DmaPrintf("| Sys time : %d\n",xTaskGetTickCount());
+		Usart2DmaPrintf("| Sys time : %d\n", xTaskGetTickCount());
 		Usart2DmaPrintf("| Mode:\t%d  \t\tSetMode:\t\t%d  \t|\n", sys_mode,
 				sys_setting);
 		Usart2DmaPrintf("| mdir:\t%d  \t\tSmoothMode:\t%d  \t|\n", motor_dir,
@@ -403,39 +431,57 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
 	/* USER CODE BEGIN StartDefaultTask */
+	//int time_count=0;
 	/* Infinite loop */
 	for (;;) {
-
-		if (buttom_flag[1] > 0) { //按下1按鈕
-			/*
-			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
-			 * 第一個數值為緩啟動每次變化量時間 	預設50
-			 * 第二個數值時間					預設5000 = 5秒
-			 * 第三個緩請動最大輸出值			預設500
-			 * 第四個正常常模式下功率 			預設100%
-			 */
-			//turn_on_motor(50, 5000, 500, 1000);
-			turn_on_motor(real_adc1 / 50, 5000, real_adc1, 2000);
+		osDelay(1000);
+		if (sys_mode == 1) {
 			//clean_buttom_flag();
-		} else if (buttom_flag[2] > 0) { //按下2按鈕
-
-		} else if (buttom_flag[3] > 0) { //按鈕3
-			/*
-			 * turn_on_motor(int slow_time,int time,int slow_pwm,int pwm)
-			 * 第一個數值為緩啟動每次變化量時間 	預設50
-			 * 第二個數值時間					預設5000 = 5秒
-			 * 第三個緩請動最大輸出值			預設500
-			 * 第四個正常常模式下功率 			預設100%
-			 */
-			//turn_off_motor(50, 5000, 500, 1000);
-			turn_off_motor(real_adc1 / 50, 5000, real_adc1, 2000);
-			//buttom_flag[2] = 0;
+			timer_conut = 0;
+			run_motor(motor_dir, 0, smooth_mode);
+			while (timer_conut < run_time_s) {
+				timer_conut++;
+				osDelay(1);
+			}
+			timer_conut = 0;
+			run_motor(motor_dir, 0, 0);
+			while (timer_conut < run_time_n) {
+				timer_conut++;
+				osDelay(1);
+			}
+			timer_conut = 0;
+			run_motor(motor_dir, 0, smooth_mode);
+			while (timer_conut < run_time_s) {
+				timer_conut++;
+				osDelay(1);
+			}
+			stop_motor();
+		} else if (sys_mode == 2) {
 			//clean_buttom_flag();
-
-		} else if (buttom_flag[4] > 0) { //按鈕4
+			stop_motor();
+		} else if (sys_mode == 3) {
 			//clean_buttom_flag();
+			timer_conut = 0;
+			run_motor(motor_dir, 1, smooth_mode);
+			while (timer_conut < run_time_s) {
+				timer_conut++;
+				osDelay(1);
+			}
+			timer_conut = 0;
+			run_motor(motor_dir, 1, 0);
+			while (timer_conut < run_time_n) {
+				timer_conut++;
+				osDelay(1);
+			}
+			timer_conut = 0;
+			run_motor(motor_dir, 1, smooth_mode);
+			while (timer_conut < run_time_s) {
+				timer_conut++;
+				osDelay(1);
+			}
+			stop_motor();
 		}
-		osDelay(1);
+		clean_buttom_flag();
 
 	}
 	/* USER CODE END StartDefaultTask */
@@ -478,19 +524,18 @@ void StartTask03(void *argument) {
 	/* USER CODE BEGIN StartTask03 */
 	/* Infinite loop */
 	for (;;) {
-/*
-		writeFlashData = 0x55555555;
-		writeFlashTest();
-		printFlashTest();
-		writeFlashData = 0xaaaaaaaa;
-		writeFlashTest();
-		printFlashTest();
-*/
-		while (1) {                        //for test
-			//printFlashTest();
-			osDelay(1000);
+		if (buttom_flag[1] > 0) {                        //up
+			sys_mode = 1;
+			//run_motor(motor_dir, 1);
 		}
-		// Usart2DmaPrintf("test...%d\n",count++);
+		if (buttom_flag[2] > 0) {                        //mind
+			sys_mode = 2;
+			//stop_motor();
+		}
+		if (buttom_flag[3] > 0) {                        //down
+			sys_mode = 3;
+			//run_motor(motor_dir, 1);
+		}
 		if (buttom_flag[4] > 0) {                        //jump setting
 			sys_setting = 0;
 			point_motor();
@@ -498,6 +543,7 @@ void StartTask03(void *argument) {
 
 		if (buttom_flag[1] > 0 && buttom_flag[3] > 0) {      //into setting mode
 			sys_setting = 1;
+			clean_buttom_flag();
 			point_motor();
 			while (sys_setting > 0) {
 				if (buttom_flag[2] > 0 && sys_setting == 1) {           //改變旋轉方向
@@ -523,7 +569,7 @@ void StartTask03(void *argument) {
 					sys_setting = 1;
 				} else if (buttom_flag[2] > 0 && buttom_flag[3] > 0) { //Top limit Set by user
 					sys_setting = 3;
-					run_motor(motor_dir, 0);
+					run_motor(motor_dir, 1, 0);
 					while (1) {                        //keep run
 						if (buttom_flag[2] > 0) {
 							stop_motor();
@@ -534,7 +580,7 @@ void StartTask03(void *argument) {
 					}
 				} else if (buttom_flag[1] > 0 && buttom_flag[2] > 0) { //Bottom limit Set by user
 					sys_setting = 4;
-					run_motor(abs(motor_dir - 1), 0);
+					run_motor(abs(motor_dir - 1), 0, 0);
 					while (1) {                        //keep run
 						if (buttom_flag[2] > 0) {
 							stop_motor();
@@ -545,11 +591,8 @@ void StartTask03(void *argument) {
 					}
 				}
 				osDelay(250);
-				//HAL_UART_Transmit_DMA(&huart2,"Setting mode: %d\n",sys_setting,sizeof("stop_motor\n")-1);
-
 			}
 		}
-
 		osDelay(250);
 	}
 	/* USER CODE END StartTask03 */
