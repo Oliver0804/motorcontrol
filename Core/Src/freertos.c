@@ -52,6 +52,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 int timer_conut = 0;
+int motor_res=0;
 int run_time_n = 5000; 	//全速功率-秒數
 int run_time_s = 1000; 	//慢速功率-秒數
 int run_pwm_n = 4000;	//全速功率
@@ -339,6 +340,8 @@ void print_sysinfo(int mode) {
 				sys_setting);
 		Usart2DmaPrintf("| m_dir:\t%d  \t\tSmoothMode:\t%d  \t|\n", motor_dir,
 				smooth_mode);
+		Usart2DmaPrintf("| m_res:\t%d  \t\tSmoothMode:\t%d  \t|\n", motor_res,
+				smooth_mode);
 		Usart2DmaPrintf("| TimeN:\t%dms\tTimeSlow:\t%dms\t|\n", run_time_n,
 				run_time_s);
 		Usart2DmaPrintf("| pwmN:\t%d  \tPWNSlow:\t%d  \t|\n", run_pwm_n,
@@ -357,6 +360,8 @@ void print_sysinfo(int mode) {
 		printf("save data mode error\n");
 	}
 }
+
+
 
 /* USER CODE END FunctionPrototypes */
 
@@ -445,7 +450,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -453,7 +458,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 0, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -461,7 +466,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 0, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -475,7 +480,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -483,7 +488,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 1, 0);
 			while (timer_conut < run_time_n) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -491,7 +496,7 @@ void StartDefaultTask(void *argument) {
 			run_motor(motor_dir, 1, smooth_mode);
 			while (timer_conut < run_time_s) {
 				timer_conut++;
-				if (buttom_flag[2] > 0)
+				if (buttom_flag[2] > 0||motor_res==1)
 					break;
 				osDelay(1);
 			}
@@ -518,11 +523,18 @@ void StartTask02(void *argument) {
 		for (i = 0, ad1 = 0, ad2 = 0; i < 100;) {
 			ad1 += ADC_Value[i++];
 			ad2 += ADC_Value[i++];
-			osDelay(10);
+			osDelay(1);
 		}
 		real_adc1 = ad1 / 50;
 		real_adc2 = ad2 / 50;
-		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+		if(real_adc1>real_adc2){
+			motor_res=1;
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+		}else{
+			motor_res=0;
+			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+		}
+		//HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 		print_sysinfo(0);
 	}
 
