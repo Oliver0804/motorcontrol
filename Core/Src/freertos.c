@@ -54,8 +54,8 @@
 int timer_conut = 0;
 int run_time_n = 5000; 	//全速功率-秒數
 int run_time_s = 1000; 	//慢速功率-秒數
-int run_pwm_n = 2000;	//全速功率
-int run_pwm_s = 100;	//慢速功率
+int run_pwm_n = 4000;	//全速功率
+int run_pwm_s = 2000;	//慢速功率
 int smooth_mode = 1; 	//緩速模式 0-關閉 1-開啟
 
 uint32_t ADC_Value[100];
@@ -552,7 +552,7 @@ void StartTask03(void *argument) {
 			sys_mode = 3;
 			//run_motor(motor_dir, 1);
 		}
-		if (buttom_flag[4] > 0) {                        //jump setting
+		if (buttom_flag[4] > 0&&sys_setting==1) {                        //jump setting
 			sys_setting = 0;
 			point_motor();
 		}
@@ -617,7 +617,7 @@ void StartTask03(void *argument) {
 				osDelay(250);
 			}
 		}
-		osDelay(250);
+		osDelay(100);
 	}
 	/* USER CODE END StartTask03 */
 }
